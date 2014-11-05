@@ -8,13 +8,19 @@
 
 #import "CreatePostController.h"
 #import "SWRevealViewController.h"
+#import "Reachability.h"
 
 @interface CreatePostController ()
-
+{
+    Reachability *internetReachableFoo;
+}
 @end
 
 @implementation CreatePostController
 @synthesize tbx_post = _post;
+@synthesize lbl_user = _user;
+NSString *connection;
+NSString *connectedto;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -29,12 +35,12 @@
 {
     [super viewDidLoad];
     NSUserDefaults *loggedIn = [NSUserDefaults standardUserDefaults];
-    [loggedIn setObject:@"NO" forKey:@"logged"];
-    [loggedIn synchronize];
-    
+    NSString *username = [loggedIn objectForKey:@"user"];
+    _user.text = username;
     _post.delegate = self;
     _barButton.target = self.revealViewController;
     _barButton.action = @selector(revealToggle:);
+    
     [[self navigationController] setNavigationBarHidden:YES];
     
     [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
@@ -114,14 +120,34 @@
 
 - (void)OpenGallery
 {
-    UIImagePickerController * picker = [[UIImagePickerController alloc] init];
+    /*UIImagePickerController * picker = [[UIImagePickerController alloc] init];
 	picker.delegate = self;
     
 	
     picker.sourceType = UIImagePickerControllerSourceTypeSavedPhotosAlbum;
 	
     
-	[self presentModalViewController:picker animated:YES];
+	[self presentModalViewController:picker animated:YES];*/
+    
+    UIImagePickerController * imagePicker = [[UIImagePickerController alloc] init];
+    [imagePicker setDelegate:self];
+#ifdef __i386__
+    [imagePicker setSourceType:UIImagePickerControllerSourceTypeSavedPhotosAlbum];
+#else
+    [imagePicker setSourceType:UIImagePickerControllerSourceTypeCamera];
+#endif
+    [self presentModalViewController:imagePicker animated:YES];
+}
+
+- (void)imagePickerController:(UIImagePickerController *)picker
+        didFinishPickingImage:(UIImage *)img
+                  editingInfo:(NSDictionary *)editingInfo{
+    [picker dismissModalViewControllerAnimated:YES];
+    //[self.image setImage:img];
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker{
+    [picker dismissModalViewControllerAnimated:YES];
 }
 
 /*
@@ -135,7 +161,91 @@
 }
 */
 
-- (IBAction)btn_copy:(UIButton *)sender {
+- (IBAction)btn_copy:(UIButton *)sender
+{
+    [self testInternetConnection];
+    [self ConnectedTo];
+    
+    NSUserDefaults *setting = [NSUserDefaults standardUserDefaults];
+    NSString *wifisetting = [setting objectForKey:@"WifiSetting"];
+    
+        if([connection isEqualToString:@"true"])
+        {
+            if([wifisetting isEqualToString:@"YES"] && [connectedto isEqualToString:@"wifi"])
+            {
+                [self CopyUploadPost];
+            }
+            else if([wifisetting isEqualToString:@"YES"] && [connectedto isEqualToString:@"3g"])
+            {
+                UIAlertView* mes=[[UIAlertView alloc] initWithTitle:@"Error"
+                                                            message:@"You are not connected to wifi" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles: nil];
+                [mes show];
+            }
+            else if([wifisetting isEqualToString:@"NO"])
+            {
+                [self CopyUploadPost];
+            }
+        }
+        else
+        {
+            UIAlertView* mes=[[UIAlertView alloc] initWithTitle:@"Error"
+                                                    message:@"You need a internet connection to log in." delegate:self cancelButtonTitle:@"Ok" otherButtonTitles: nil];
+            [mes show];
+        }
+}
+
+- (void)CopyUploadPost
+{
+    
+}
+
+- (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
+    [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+        [[UIMenuController sharedMenuController] setMenuVisible:NO animated:NO];
+    }];
+    return [super canPerformAction:action withSender:sender];
+}
+
+- (void)testInternetConnection
+{
+    internetReachableFoo = [Reachability reachabilityWithHostname:@"www.google.com"];
+    
+    // Internet is reachable
+    internetReachableFoo.reachableBlock = ^(Reachability*reach)
+    {
+        // Update the UI on the main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            connection = @"true";
+        });
+    };
+    
+    // Internet is not reachable
+    internetReachableFoo.unreachableBlock = ^(Reachability*reach)
+    {
+        // Update the UI on the main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            connection = @"false";
+        });
+    };
+    
+    [internetReachableFoo startNotifier];
+}
+
+- (void)ConnectedTo
+{
+    Reachability *reachability = [Reachability reachabilityForInternetConnection];
+    [reachability startNotifier];
+    
+    NetworkStatus status = [reachability currentReachabilityStatus];
+    
+    if (status == ReachableViaWiFi)
+    {
+        connectedto = @"wifi";
+    }
+    else if (status == ReachableViaWWAN)
+    {
+        connectedto = @"3g";
+    }
 }
 
 @end

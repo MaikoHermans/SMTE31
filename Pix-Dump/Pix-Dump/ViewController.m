@@ -9,8 +9,12 @@
 #import "ViewController.h"
 #import "CreatePostController.h"
 #import "AFNetworking.h"
+#import "Reachability.h"
 
 @interface ViewController ()
+{
+    Reachability *internetReachableFoo;
+}
 
 @end
 
@@ -19,7 +23,26 @@
 @synthesize tbx_password = _password;
 @synthesize lbl_error = _error;
 NSString *result = nil;
+NSString *connection = nil;
 
+- (void)loadView
+{
+    [super loadView];
+    NSUserDefaults *loggedIn = [NSUserDefaults standardUserDefaults];
+    NSString *loggedValue = [loggedIn objectForKey:@"loggedin"];
+    
+    if([loggedValue isEqualToString:@"YES"])
+    {
+        UIViewController *vc = [self presentedViewController];
+        
+        if ([vc isKindOfClass:[ViewController class]])
+        {
+            [self performSegueWithIdentifier:@"login" sender:self];
+        }
+        
+    }
+
+}
 
 - (void)viewDidLoad
 {
@@ -44,7 +67,13 @@ NSString *result = nil;
     
     if([loggedValue isEqualToString:@"YES"] && [log isEqualToString:@"YES"])
     {
-        [self performSegueWithIdentifier:@"login" sender:self];
+        UIViewController *vc = [self presentedViewController];
+        
+        if ([vc isKindOfClass:[ViewController class]])
+        {
+            [self performSegueWithIdentifier:@"login" sender:self];
+        }
+
     }
 }
 
@@ -67,14 +96,26 @@ NSString *result = nil;
 
 -(IBAction)btn_login:(UIButton *)sender
 {
-    //result = nil;
+    result = nil;
     _error.text = @"";
     if(_email.text && _email.text.length >0 && _password.text && _password.text.length >0)
     {
-        [self loadJsonData];
-        if([result isEqualToString:@"Correct"])
+        [self testInternetConnection];
+        
+        if(![connection isEqualToString:@"false"])
         {
-            [self performSegueWithIdentifier:@"login" sender:self];
+            [self loadJsonData];
+            if([result isEqualToString:@"Correct"])
+            {
+                [self performSegueWithIdentifier:@"login" sender:self];
+            }
+        }
+        else
+        {
+            UIAlertView* mes=[[UIAlertView alloc] initWithTitle:@"Error"
+                                                        message:@"You need a internet connection to log in." delegate:self cancelButtonTitle:@"Ok" otherButtonTitles: nil];
+            
+            [mes show];
         }
     }
     else if(_email.text && _email.text.length > 0)
@@ -88,6 +129,27 @@ NSString *result = nil;
     else
     {
         _error.text = @"Please be sure to enter a email and password" ;
+    }
+}
+
+- (void)testInternetConnection
+{
+    Reachability *reachability = [Reachability reachabilityForInternetConnection];
+    [reachability startNotifier];
+    
+    NetworkStatus status = [reachability currentReachabilityStatus];
+    if(status == NotReachable)
+    {
+        connection = @"false";
+    }
+    
+    else if (status == ReachableViaWiFi)
+    {
+        connection = @"wifi";
+    }
+    else if (status == ReachableViaWWAN)
+    {
+        connection = @"3g";
     }
 }
 
@@ -122,9 +184,18 @@ NSString *result = nil;
         
         //This code is executed when the result was ok.
         NSString *jsonresult = [responseObject objectForKey:@"Result"];
+        NSString *jsonuser = [responseObject objectForKey:@"Username"];
         if([jsonresult isEqualToString:@"Correct"])
         {
+            NSUserDefaults *loggedIn = [NSUserDefaults standardUserDefaults];
+            [loggedIn setObject:jsonuser forKey:@"user"];
+            [loggedIn synchronize];
+
           result = @"Correct";
+        }
+        else
+        {
+            result = @"Incorrect";
         }
         [self login];
         
