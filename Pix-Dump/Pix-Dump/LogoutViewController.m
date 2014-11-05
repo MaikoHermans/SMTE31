@@ -26,7 +26,8 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
+    
+
 }
 
 - (void)didReceiveMemoryWarning
@@ -48,6 +49,13 @@
 
 - (IBAction)btn_logoutYes:(id)sender
 {
-    [self performSegueWithIdentifier:@"logout" sender:self];
+    NSUserDefaults *loggedIn = [NSUserDefaults standardUserDefaults];
+    [loggedIn setObject:@"NO" forKey:@"loggedin"];
+    [loggedIn synchronize];
+    NSString *logged = [loggedIn objectForKey:@"loggedin"];
+    if([logged isEqualToString:@"NO"])
+    {
+        [self performSegueWithIdentifier:@"logout" sender:self];
+    }
 }
 @end

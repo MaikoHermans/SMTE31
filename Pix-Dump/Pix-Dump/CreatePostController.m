@@ -28,6 +28,10 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    NSUserDefaults *loggedIn = [NSUserDefaults standardUserDefaults];
+    [loggedIn setObject:@"NO" forKey:@"logged"];
+    [loggedIn synchronize];
+    
     _post.delegate = self;
     _barButton.target = self.revealViewController;
     _barButton.action = @selector(revealToggle:);

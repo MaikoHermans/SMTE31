@@ -13,6 +13,8 @@
 @end
 
 @implementation SettingsController
+@synthesize sl_wifioutlet = _wifi;
+@synthesize sl_savedoutlet = _saved;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -46,4 +48,36 @@
 }
 */
 
+- (IBAction)sl_wifi:(id)sender
+{
+    if(_wifi.on)
+    {
+        NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+        [settings setObject:@"YES" forKey:@"WifiSetting"];
+        [settings synchronize];
+    }
+    else
+    {
+        NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+        [settings setObject:@"NO" forKey:@"WifiSetting"];
+        [settings synchronize];
+    }
+}
+
+- (IBAction)sl_saved:(id)sender
+{
+    if(_saved.on)
+    {
+        NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+        [settings setObject:@"YES" forKey:@"SavePost"];
+        [settings synchronize];
+
+    }
+    else
+    {
+        NSUserDefaults *settings = [NSUserDefaults standardUserDefaults];
+        [settings setObject:@"NO" forKey:@"SavePost"];
+        [settings synchronize];
+    }
+}
 @end

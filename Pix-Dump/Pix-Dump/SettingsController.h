@@ -10,4 +10,11 @@
 
 @interface SettingsController : ViewController
 
+@property (weak, nonatomic) IBOutlet UISwitch *sl_wifioutlet;
+
+@property (weak, nonatomic) IBOutlet UISwitch *sl_savedoutlet;
+
+- (IBAction)sl_wifi:(id)sender;
+
+- (IBAction)sl_saved:(id)sender;
 @end
