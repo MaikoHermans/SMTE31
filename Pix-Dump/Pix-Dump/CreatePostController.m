@@ -9,6 +9,7 @@
 #import "CreatePostController.h"
 #import "SWRevealViewController.h"
 #import "Reachability.h"
+#import <AssetsLibrary/AssetsLibrary.h>
 
 @interface CreatePostController ()
 {
@@ -129,25 +130,42 @@ NSString *connectedto;
     
 	[self presentModalViewController:picker animated:YES];*/
     
-    UIImagePickerController * imagePicker = [[UIImagePickerController alloc] init];
-    [imagePicker setDelegate:self];
-#ifdef __i386__
-    [imagePicker setSourceType:UIImagePickerControllerSourceTypeSavedPhotosAlbum];
-#else
-    [imagePicker setSourceType:UIImagePickerControllerSourceTypeCamera];
-#endif
-    [self presentModalViewController:imagePicker animated:YES];
+    QBImagePickerController *imagePickerController = [[QBImagePickerController alloc] init];
+    imagePickerController.delegate = self;
+    imagePickerController.allowsMultipleSelection = YES;
+    
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:imagePickerController];
+    //imagePickerController.groupTypes = @[
+      //                                   @(ALAssetsGroupSavedPhotos),
+        //                                 @(ALAssetsGroupPhotoStream),
+          //                               @(ALAssetsGroupAlbum)
+            //                             ];
+    [self presentViewController:navigationController animated:YES completion:NULL];
 }
 
-- (void)imagePickerController:(UIImagePickerController *)picker
-        didFinishPickingImage:(UIImage *)img
-                  editingInfo:(NSDictionary *)editingInfo{
-    [picker dismissModalViewControllerAnimated:YES];
-    //[self.image setImage:img];
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+
+{
+    [self.navigationController dismissViewControllerAnimated: YES completion: nil];
+    UIImage *image = [info valueForKey: UIImagePickerControllerOriginalImage];
+    NSData *imageData = UIImageJPEGRepresentation(image, 0.1);
+    
 }
 
-- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker{
-    [picker dismissModalViewControllerAnimated:YES];
+- (void)dismissImagePickerController
+{
+    if (self.presentedViewController) {
+        [self dismissViewControllerAnimated:YES completion:NULL];
+    } else {
+        [self.navigationController popToViewController:self animated:YES];
+    }
+}
+
+- (void)qb_imagePickerControllerDidCancel:(QBImagePickerController *)imagePickerController
+{
+    NSLog(@"*** qb_imagePickerControllerDidCancel:");
+    
+    [self dismissImagePickerController];
 }
 
 /*

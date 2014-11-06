@@ -7,8 +7,9 @@
 //
 
 #import "ViewController.h"
+#import "QBImagePickerController.h"
 
-@interface CreatePostController : UIViewController <UIActionSheetDelegate>
+@interface CreatePostController : UIViewController <UIActionSheetDelegate, QBImagePickerControllerDelegate>
 
 @property (strong, nonatomic) IBOutlet UILabel *lbl_user;
 
